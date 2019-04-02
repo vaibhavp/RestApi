@@ -12,12 +12,13 @@ from resources.store import Store,StoreList
 app= Flask(__name__)
 app.secret_key = "vaibhav"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL','sqlite:///data.db')
+#app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL','sqlite:///data.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://vaibhav:vaibhav@postgres:5432/vaibhav'
 api= Api(app)
 
-#@app.before_first_request
-#def create_db():
-#    db.create_all()
+@app.before_first_request
+def create_db():
+    db.create_all()
 
 jwt= JWT(app,authenticate,identity) #/auth
 
@@ -35,5 +36,6 @@ if __name__ == '__main__':
     if app.config['DEBUG']:
         @app.before_first_request
         def create_tables():
+            print("inside create_table!!!!")
             db.create_all()
-    app.run(port=8080)
+    app.run(port=9000,debug=True,host='0.0.0.0')
