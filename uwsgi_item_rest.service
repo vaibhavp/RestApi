@@ -1,0 +1,14 @@
+[unit]
+Description=uwSGI items rest
+
+[Service]
+Environment=DATABASE_URL=postgres://vaibhav:vaibhav@localhost:5432/vaibhav
+ExecStart=/var/www/html/items-rest/venv/bin/uwsgi --master --emperor /var/www/html/items-rest/uwsgi.ini --die-on-term --uid ubuntu --gid ubuntu --logto /var/www/html/items-rest/logs/vaibhav.log
+Restart=always 
+KillSignal=SIGQUIT
+Type=notify
+NotifyAccess=all
+
+
+[Install] 
+WantedBy=multi-user.target 
