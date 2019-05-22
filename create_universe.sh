@@ -25,19 +25,15 @@ RF=$3
 echo "Replication factor: $RF"
 
 # Get the list of nodes (ips) used for intra-cluster communication.
-NODES=$4
+IpArray=($4 $5 $6)
+NODES=${IpArray[*]}
 echo "Creating universe with nodes: [$NODES]"
 
-# Get the list of ips to ssh to the corresponding nodes.
-SSH_IPS=$5
-echo "Connecting to nodes with ips: [$SSH_IPS]"
-
 # Get the list of AZs for the nodes.
-ZONES=$6
+AZ_Array=($7 $8 $9)
+ZONES=${AZ_Array[*]}
+echo "Creating universe in AZ's: [$ZONES]"
 
-# Get the credentials to connect to the nodes.
-SSH_USER=$7
-SSH_KEY_PATH=$8
 
 YB_HOME=/home/ec2-user/yugabyte-db
 YB_MASTER_ADDRESSES=""
@@ -71,7 +67,6 @@ do
   	      YB_MASTER_ADDRESSES="$YB_MASTER_ADDRESSES,"
   	   fi
            YB_MASTER_ADDRESSES="$YB_MASTER_ADDRESSES$node:7100"
-           SSH_MASTER_IPS="$SSH_MASTER_IPS ${SSH_IPS_array[$node_num]}"
            master_ips="$master_ips $node"
            idx=`expr $idx + 1`
         fi
@@ -82,7 +77,6 @@ do
   	  YB_MASTER_ADDRESSES="$YB_MASTER_ADDRESSES,"
   	fi
         YB_MASTER_ADDRESSES="$YB_MASTER_ADDRESSES$node:7100"
-        SSH_MASTER_IPS="$SSH_MASTER_IPS ${SSH_IPS_array[$idx]}"
         master_ips="$master_ips $node"
         idx=`expr $idx + 1`
      fi
@@ -191,7 +185,7 @@ sudo chmod 0644 /etc/environment
 nohup ${TSERVER_EXE} --flagfile ${YB_HOME}/tserver/conf/server.conf >>${TSERVER_OUT} 2>>${TSERVER_ERR} </dev/null &
 
   TSERVER_CRON_OK="##";
-  TSERVER_CRON_OK+=`ssh -o "StrictHostKeyChecking no" -i ${SSH_KEY_PATH} ${SSH_USER}@$node 'crontab -l'`;
+  TSERVER_CRON_OK+=`crontab -l`;
   TSERVER_CRON_PATTERN="start_tserver.sh"
   if [[ "$TSERVER_CRON_OK" == *${TSERVER_CRON_PATTERN}* ]]; then
      echo "Found tserver crontab entry at [$node]"
