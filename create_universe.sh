@@ -34,13 +34,13 @@ AZ_Array=($7 $8 $9)
 ZONES=${AZ_Array[*]}
 echo "Creating universe in AZ's: [$ZONES]"
 
+INSTANCE_ZONE={$10}
 
 YB_HOME=/home/ec2-user/yugabyte-db
 YB_MASTER_ADDRESSES=""
 
 zone_array=($ZONES)
 num_zones=`(IFS=$'\n';sort <<< "${zone_array[*]}") | uniq -c | wc -l`
-SSH_IPS_array=($SSH_IPS)
 
 idx=0
 node_num=0
@@ -84,26 +84,6 @@ do
   node_num=`expr $node_num + 1`;
 done
 
-# Error out if we do not have sufficient nodes.
-if (( $idx < $RF )); then
-  echo "Error: insufficient nodes - got $idx node(s) but rf = $RF"
-  exit 1
-fi
-echo "Master addresses: $YB_MASTER_ADDRESSES"
-MASTER_ADDR_ARRAY=($master_ips)
-
-# Error out if number of AZ's is not 1 but not equal to RF
-if (( $num_zones > 1 )); then
-   if (( $num_zones < $RF )); then
-      echo "Error insufficient AZ's for master placement - must be equal to $RF"
-      exit 1
-   else
-      echo "Multi AZ placement detected. Nodes in ${zone_array[@]}"
-   fi
-else
-   echo "Single AZ placement detected - all nodes in ${zone_array[0]}"
-fi
-
 ###############################################################################
 # Setup master addresses across all the nodes.
 ###############################################################################
@@ -123,20 +103,10 @@ echo "--placement_cloud=${CLOUD_NAME}" >> ${YB_HOME}/master/conf/server.conf
 echo "--placement_cloud=${CLOUD_NAME}" >> ${YB_HOME}/tserver/conf/server.conf
 echo "--placement_region=${REGION}" >> ${YB_HOME}/master/conf/server.conf
 echo "--placement_region=${REGION}" >> ${YB_HOME}/tserver/conf/server.conf
-if [ $num_zones -eq  1 ]; then
-   echo "--placement_zone=${zone_array[0]}" >> ${YB_HOME}/master/conf/server.conf
-   echo "--placement_zone=${zone_array[0]}" >> ${YB_HOME}/tserver/conf/server.conf
-fi
+echo "--placement_zone=${INSTANCE_ZONE}" >> ${YB_HOME}/master/conf/server.conf
+echo "--placement_zone=${INSTANCE_ZONE}" >> ${YB_HOME}/tserver/conf/server.conf
 
-idx=0
-for node in $SSH_IPS
-do
-  if [ $num_zones -gt 1 ]; then
-     echo "--placement_zone=${zone_array[idx]}" >> ${YB_HOME}/master/conf/server.conf
-     echo "--placement_zone=${zone_array[idx]}" >> ${YB_HOME}/tserver/conf/server.conf
-  fi
-  idx=`expr $idx + 1`
-done
+
 
 ###############################################################################
 # Setup YSQL proxies across all nodes
