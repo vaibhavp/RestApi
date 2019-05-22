@@ -34,7 +34,7 @@ AZ_Array=($7 $8 $9)
 ZONES=${AZ_Array[*]}
 echo "Creating universe in AZ's: [$ZONES]"
 
-INSTANCE_ZONE={$10}
+INSTANCE_ZONE=${10}
 
 YB_HOME=/home/ec2-user/yugabyte-db
 YB_MASTER_ADDRESSES=""
